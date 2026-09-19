@@ -1,0 +1,2235 @@
+<title>Ma Ludothèque</title>
+<style>
+:root{
+  --bg:#0c0e14;
+  --bg-elev:#12151e;
+  --surface:#191d29;
+  --surface-2:#222736;
+  --text:#eef0f6;
+  --text-dim:#8791a8;
+  --border:#2a2f3f;
+  --snake:#3ddc97;
+  --memory:#ffb703;
+  --morpion:#ff5d8f;
+  --breakout:#5ec8ff;
+  --runner:#c77dff;
+  --c4:#ffd166;
+  --g2048:#f4845f;
+  --tetris:#4cc9f0;
+  --flappy:#f6bd60;
+  --pong:#95e06c;
+  --accent:#7c8cff;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  padding-inline:20px;
+  padding-block:28px;
+}
+.wrap{max-width:920px;margin:0 auto;}
+
+/* ---- header ---- */
+.site-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:32px;
+  flex-wrap:wrap;
+}
+.logo{
+  font-family:'Press Start 2P',monospace;
+  font-size:15px;
+  line-height:1.6;
+  letter-spacing:1px;
+  background:linear-gradient(90deg,var(--snake),var(--breakout) 40%,var(--morpion) 80%);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+}
+.tagline{
+  color:var(--text-dim);
+  font-size:14px;
+  margin-top:4px;
+}
+.badge{
+  font-family:'VT323',monospace;
+  font-size:20px;
+  color:var(--text-dim);
+  border:1px solid var(--border);
+  border-radius:999px;
+  padding:4px 14px;
+  background:var(--surface);
+  white-space:nowrap;
+}
+
+/* ---- home grid ---- */
+.game-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+  gap:18px;
+}
+.game-card{
+  position:relative;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:22px 20px 20px;
+  cursor:pointer;
+  overflow:hidden;
+  transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+  text-align:left;
+  color:var(--text);
+  font:inherit;
+}
+.game-card::before{
+  content:"";
+  position:absolute;
+  inset:0 0 auto 0;
+  height:3px;
+  background:var(--accent-color);
+}
+.game-card:hover{
+  transform:translateY(-5px);
+  border-color:var(--accent-color);
+  box-shadow:0 14px 28px -14px var(--accent-color);
+}
+.game-card:focus-visible{outline:2px solid var(--accent-color);outline-offset:3px;}
+.card-icon{
+  font-size:30px;
+  width:52px;height:52px;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:12px;
+  background:color-mix(in srgb, var(--accent-color) 18%, var(--surface-2));
+  margin-bottom:14px;
+}
+.card-title{
+  font-size:17px;
+  font-weight:800;
+  margin:0 0 6px;
+}
+.card-desc{
+  font-size:13.5px;
+  color:var(--text-dim);
+  margin:0 0 14px;
+  line-height:1.5;
+}
+.card-score{
+  font-family:'VT323',monospace;
+  font-size:18px;
+  color:var(--accent-color);
+}
+
+/* ---- game screen ---- */
+.game-screen{display:none;}
+.game-screen.active{display:block;}
+.game-toolbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:18px;
+  flex-wrap:wrap;
+}
+.back-btn{
+  font:inherit;
+  font-weight:700;
+  font-size:14px;
+  color:var(--text);
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:9px 16px;
+  cursor:pointer;
+  display:flex;align-items:center;gap:6px;
+}
+.back-btn:hover{border-color:var(--accent-color);color:var(--accent-color);}
+.game-title{
+  font-size:19px;
+  font-weight:800;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  color:var(--accent-color);
+}
+.stat-row{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.stat-chip{
+  font-family:'VT323',monospace;
+  font-size:19px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:5px 14px;
+  color:var(--text);
+}
+.stat-chip b{color:var(--accent-color);font-weight:400;}
+
+.game-stage{
+  background:var(--bg-elev);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:22px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:16px;
+}
+canvas{
+  max-width:100%;
+  background:#05060a;
+  border-radius:12px;
+  border:1px solid var(--border);
+  touch-action:none;
+}
+.hint{
+  color:var(--text-dim);
+  font-size:12.5px;
+  text-align:center;
+}
+
+/* dpad */
+.dpad{
+  display:grid;
+  grid-template-columns:repeat(3,52px);
+  grid-template-rows:repeat(3,52px);
+  gap:6px;
+}
+.dpad button{
+  font-size:18px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background:var(--surface);
+  color:var(--text);
+  cursor:pointer;
+}
+.dpad button:active{background:var(--accent-color);color:#0c0e14;}
+.dpad .up{grid-column:2;grid-row:1;}
+.dpad .left{grid-column:1;grid-row:2;}
+.dpad .right{grid-column:3;grid-row:2;}
+.dpad .down{grid-column:2;grid-row:3;}
+
+.primary-btn{
+  font:inherit;
+  font-weight:700;
+  font-size:14px;
+  color:#0c0e14;
+  background:var(--accent-color);
+  border:none;
+  border-radius:10px;
+  padding:10px 20px;
+  cursor:pointer;
+}
+.primary-btn:hover{filter:brightness(1.08);}
+.ghost-btn{
+  font:inherit;
+  font-weight:700;
+  font-size:13px;
+  color:var(--text-dim);
+  background:transparent;
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:9px 16px;
+  cursor:pointer;
+}
+.ghost-btn:hover{color:var(--text);border-color:var(--text-dim);}
+
+.overlay-msg{
+  font-family:'VT323',monospace;
+  font-size:24px;
+  color:var(--accent-color);
+  text-align:center;
+  min-height:30px;
+}
+
+/* memory */
+.memory-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(56px,72px));
+  gap:8px;
+}
+.mcard{
+  aspect-ratio:1;
+  perspective:600px;
+  cursor:pointer;
+}
+.mcard-inner{
+  position:relative;
+  width:100%;height:100%;
+  transform-style:preserve-3d;
+  transition:transform .35s;
+}
+.mcard.flipped .mcard-inner, .mcard.matched .mcard-inner{transform:rotateY(180deg);}
+.mface{
+  position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:10px;
+  backface-visibility:hidden;
+  font-size:26px;
+}
+.mface.back{
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  color:var(--memory);
+  font-family:'Press Start 2P',monospace;
+  font-size:14px;
+}
+.mface.front{
+  background:color-mix(in srgb, var(--memory) 20%, var(--surface-2));
+  transform:rotateY(180deg);
+  border:1px solid var(--memory);
+}
+.mcard.matched .mface.front{opacity:.55;}
+
+/* morpion */
+.morpion-grid{
+  display:grid;
+  grid-template-columns:repeat(3,80px);
+  grid-template-rows:repeat(3,80px);
+  gap:6px;
+}
+.mp-cell{
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  border-radius:10px;
+  font-family:'Press Start 2P',monospace;
+  font-size:28px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;
+  color:var(--morpion);
+}
+.mp-cell:disabled{cursor:default;}
+.mp-cell.o{color:var(--breakout);}
+.mp-cell.win{background:color-mix(in srgb, var(--morpion) 25%, var(--surface-2));}
+
+/* connect four */
+.c4-board{
+  display:flex;
+  gap:6px;
+  background:#12315c;
+  padding:8px;
+  border-radius:14px;
+  border:1px solid var(--border);
+}
+.c4-col{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  cursor:pointer;
+  padding:2px;
+  border-radius:8px;
+}
+.c4-col:hover{background:rgba(255,255,255,0.05);}
+.c4-cell{
+  width:36px;height:36px;
+  border-radius:50%;
+  background:#0a0c14;
+}
+.c4-cell.r{background:#ff5d8f;}
+.c4-cell.y{background:#ffd166;}
+
+/* 2048 */
+.g2048-board{
+  display:grid;
+  grid-template-columns:repeat(4,68px);
+  grid-template-rows:repeat(4,68px);
+  gap:8px;
+  background:var(--surface-2);
+  padding:8px;
+  border-radius:14px;
+  border:1px solid var(--border);
+  touch-action:none;
+}
+.g2048-cell{
+  border-radius:8px;
+  background:rgba(255,255,255,0.04);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'VT323',monospace;
+  font-size:26px;
+  color:#1a1030;
+  transition:background .1s;
+}
+
+/* tetris */
+.tetris-layout{
+  display:flex;
+  gap:16px;
+  align-items:flex-start;
+  flex-wrap:wrap;
+  justify-content:center;
+}
+.tetris-side{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  align-items:center;
+}
+.tetris-label{
+  font-size:12px;
+  color:var(--text-dim);
+  text-transform:uppercase;
+  letter-spacing:.08em;
+}
+
+@media (max-width:480px){
+  .morpion-grid{grid-template-columns:repeat(3,68px);grid-template-rows:repeat(3,68px);}
+  .memory-grid{grid-template-columns:repeat(4,minmax(48px,64px));}
+  .c4-cell{width:28px;height:28px;}
+  .g2048-board{grid-template-columns:repeat(4,58px);grid-template-rows:repeat(4,58px);}
+}
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Manrope:wght@400;600;700;800&display=swap">
+
+<div class="wrap">
+
+  <header class="site-header">
+    <div>
+      <div class="logo">MA LUDOTHÈQUE</div>
+      <div class="tagline">Quatre jeux, zéro téléchargement — jouez direct dans le navigateur.</div>
+    </div>
+    <div class="badge" id="global-badge">🕹️ 10 jeux disponibles</div>
+  </header>
+
+  <!-- HOME -->
+  <section id="home" class="game-grid"></section>
+
+  <!-- SNAKE -->
+  <section class="game-screen" id="screen-snake" data-color="var(--snake)">
+    <div class="game-toolbar">
+      <button class="back-btn" data-back>← Retour</button>
+      <div class="game-title">🐍 Serpent</div>
+      <div class="stat-row">
+        <div class="stat-chip">Score <b id="snake-score">0</b></div>
+        <div class="stat-chip">Record <b id="snake-best">0</b></div>
+      </div>
+    </div>
+    <div class="game-stage">
+      <canvas id="snake-canvas" width="360" height="360"></canvas>
+      <div class="overlay-msg" id="snake-msg"></div>
+      <div class="dpad">
+        <button class="up" data-dir="up">↑</button>
+        <button class="left" data-dir="left">←</button>
+        <button class="right" data-dir="right">→</button>
+        <button class="down" data-dir="down">↓</button>
+      </div>
+      <button class="primary-btn" id="snake-restart">Rejouer</button>
+      <div class="hint">Flèches / ZQSD pour diriger le serpent, ou les boutons ci-dessus. Mangez les points rouges, évitez les murs et votre queue.</div>
+    </div>
+  </section>
+
+  <!-- MEMORY -->
+  <section class="game-screen" id="screen-memory" data-color="var(--memory)">
+    <div class="game-toolbar">
+      <button class="back-btn" data-back>← Retour</button>
+      <div class="game-title">🧠 Memory</div>
+      <div class="stat-row">
+        <div class="stat-chip">Coups <b id="memory-moves">0</b></div>
+        <div class="stat-chip">Temps <b id="memory-time">0s</b></div>
+        <div class="stat-chip">Record <b id="memory-best">–</b></div>
+      </div>
+    </div>
+    <div class="game-stage">
+      <div class="memory-grid" id="memory-grid"></div>
+      <div class="overlay-msg" id="memory-msg"></div>
+      <button class="primary-btn" id="memory-restart">Nouvelle partie</button>
+      <div class="hint">Retrouvez les 8 paires en un minimum de coups.</div>
+    </div>
+  </section>
+
+  <!-- MORPION -->
+  <section class="game-screen" id="screen-morpion" data-color="var(--morpion)">
+    <div class="game-toolbar">
+      <button class="back-btn" data-back>← Retour</button>
+      <div class="game-title">⭕ Morpion</div>
+      <div class="stat-row">
+        <div class="stat-chip">Victoires <b id="mp-win">0</b></div>
+        <div class="stat-chip">Nuls <b id="mp-draw">0</b></div>
+        <div class="stat-chip">Défaites <b id="mp-loss">0</b></div>
+      </div>
+    </div>
+    <div class="game-stage">
+      <div class="morpion-grid" id="morpion-grid"></div>
+      <div class="overlay-msg" id="morpion-msg">À vous de jouer — vous êtes X</div>
+      <button class="primary-btn" id="morpion-restart">Nouvelle partie</button>
+      <div class="hint">Vous êtes X, l'ordinateur (imbattable) joue O.</div>
+    </div>
+  </section>
+
+  <!-- RUNNER -->
+  <section class="game-screen" id="screen-runner" data-color="var(--runner)">
+    <div class="game-toolbar">
+      <button class="back-btn" data-back>← Retour</button>
+      <div class="game-title">🏃 Runner</div>
+      <div class="stat-row">
+        <div class="stat-chip">Score <b id="run-score">0</b></div>
+        <div class="stat-chip">Record <b id="run-best">0</b></div>
+      </div>
+    </div>
+    <div class="game-stage">
+      <canvas id="run-canvas" width="340" height="420"></canvas>
+      <div class="overlay-msg" id="run-msg">Prêt ? Appuyez sur une touche pour courir</div>
+      <div class="dpad">
+        <button class="up" data-run="jump">⤒</button>
+        <button class="left" data-run="left">←</button>
+        <button class="right" data-run="right">→</button>
+        <button class="down" data-run="duck">⤓</button>
+      </div>
+      <button class="primary-btn" id="run-restart">Rejouer</button>
+      <div class="hint">← → pour changer de voie, ↑ / espace pour sauter, ↓ pour glisser sous les barres. Sur mobile, glissez sur l'écran ou utilisez les boutons.</div>
+    </div>
+  </section>
+
+  <!-- CONNECT FOUR -->
+  <section class="game-screen" id="screen-c4" data-color="var(--c4)">
+    <div class="game-toolbar">
+      <button class="back-btn" data-back>← Retour</button>
+      <div class="game-title">🔴 Puissance 4</div>
+      <div class="stat-row">
+        <div class="stat-chip">Victoires <b id="c4-win">0</b></div>
+        <div class="stat-chip">Nuls <b id="c4-draw">0</b></div>
+        <div class="stat-chip">Défaites <b id="c4-loss">0</b></div>
+      </div>
+    </div>
+    <div class="game-stage">
+      <div class="c4-board" id="c4-board"></div>
+      <div class="overlay-msg" id="c4-msg">À vous — cliquez une colonne</div>
+      <button class="primary-btn" id="c4-restart">Nouvelle partie</button>
+      <div class="hint">Vous êtes rouge, l'ordinateur (IA) joue jaune. Alignez 4 jetons pour gagner.</div>
+    </div>
+  </section>
+
+  <!-- 2048 -->
+  <section class="game-screen" id="screen-2048" data-color="var(--g2048)">
+    <div class="game-toolbar">
+      <button class="back-btn" data-back>← Retour</button>
+      <div class="game-title">🔢 2048</div>
+      <div class="stat-row">
+        <div class="stat-chip">Score <b id="g2048-score">0</b></div>
+        <div class="stat-chip">Record <b id="g2048-best">0</b></div>
+      </div>
+    </div>
+    <div class="game-stage">
+      <div class="g2048-board" id="g2048-board"></div>
+      <div class="overlay-msg" id="g2048-msg"></div>
+      <button class="primary-btn" id="g2048-restart">Nouvelle partie</button>
+      <div class="hint">Flèches (ou glissement tactile) pour déplacer toutes les tuiles. Deux tuiles identiques fusionnent.</div>
+    </div>
+  </section>
+
+  <!-- TETRIS -->
+  <section class="game-screen" id="screen-tetris" data-color="var(--tetris)">
+    <div class="game-toolbar">
+      <button class="back-btn" data-back>← Retour</button>
+      <div class="game-title">🧩 Tetris</div>
+      <div class="stat-row">
+        <div class="stat-chip">Score <b id="tet-score">0</b></div>
+        <div class="stat-chip">Lignes <b id="tet-lines">0</b></div>
+        <div class="stat-chip">Record <b id="tet-best">0</b></div>
+      </div>
+    </div>
+    <div class="game-stage">
+      <div class="tetris-layout">
+        <canvas id="tet-canvas" width="200" height="400"></canvas>
+        <div class="tetris-side">
+          <div class="tetris-label">Suivant</div>
+          <canvas id="tet-next" width="88" height="88"></canvas>
+        </div>
+      </div>
+      <div class="overlay-msg" id="tet-msg">Appuyez sur une touche pour commencer</div>
+      <div class="dpad">
+        <button class="up" data-tet="rotate">⟳</button>
+        <button class="left" data-tet="left">←</button>
+        <button class="right" data-tet="right">→</button>
+        <button class="down" data-tet="down">↓</button>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="ghost-btn" id="tet-drop">Chute rapide (espace)</button>
+        <button class="primary-btn" id="tet-restart">Rejouer</button>
+      </div>
+      <div class="hint">← → déplacer, ↑ tourner, ↓ descendre, espace pour une chute instantanée.</div>
+    </div>
+  </section>
+
+  <!-- FLAPPY -->
+  <section class="game-screen" id="screen-flappy" data-color="var(--flappy)">
+    <div class="game-toolbar">
+      <button class="back-btn" data-back>← Retour</button>
+      <div class="game-title">🐤 Flappy</div>
+      <div class="stat-row">
+        <div class="stat-chip">Score <b id="fly-score">0</b></div>
+        <div class="stat-chip">Record <b id="fly-best">0</b></div>
+      </div>
+    </div>
+    <div class="game-stage">
+      <canvas id="fly-canvas" width="320" height="420"></canvas>
+      <div class="overlay-msg" id="fly-msg">Cliquez ou espace pour voler</div>
+      <button class="primary-btn" id="fly-restart">Rejouer</button>
+      <div class="hint">Clic, tap ou espace pour battre des ailes. Évitez les tuyaux, ne touchez ni le sol ni le plafond.</div>
+    </div>
+  </section>
+
+  <!-- PONG -->
+  <section class="game-screen" id="screen-pong" data-color="var(--pong)">
+    <div class="game-toolbar">
+      <button class="back-btn" data-back>← Retour</button>
+      <div class="game-title">🏓 Pong</div>
+      <div class="stat-row">
+        <div class="stat-chip">Vous <b id="pong-you">0</b></div>
+        <div class="stat-chip">Ordi <b id="pong-cpu">0</b></div>
+      </div>
+    </div>
+    <div class="game-stage">
+      <canvas id="pong-canvas" width="360" height="260"></canvas>
+      <div class="overlay-msg" id="pong-msg"></div>
+      <button class="primary-btn" id="pong-restart">Réinitialiser le score</button>
+      <div class="hint">Souris, doigt ou flèches ↑ ↓ pour déplacer votre raquette (à gauche).</div>
+    </div>
+  </section>
+
+  <!-- BREAKOUT -->
+  <section class="game-screen" id="screen-breakout" data-color="var(--breakout)">
+    <div class="game-toolbar">
+      <button class="back-btn" data-back>← Retour</button>
+      <div class="game-title">🧱 Casse-briques</div>
+      <div class="stat-row">
+        <div class="stat-chip">Score <b id="brk-score">0</b></div>
+        <div class="stat-chip">Vies <b id="brk-lives">3</b></div>
+        <div class="stat-chip">Record <b id="brk-best">0</b></div>
+      </div>
+    </div>
+    <div class="game-stage">
+      <canvas id="brk-canvas" width="420" height="320"></canvas>
+      <div class="overlay-msg" id="brk-msg">Cliquez pour lancer la balle</div>
+      <button class="primary-btn" id="brk-restart">Rejouer</button>
+      <div class="hint">Souris, doigt ou flèches ← → pour déplacer la raquette. Détruisez toutes les briques !</div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- storage helpers ---------------- */
+  function loadNum(key, fallback){
+    try{ var v = localStorage.getItem(key); return v===null? fallback : Number(v); }catch(e){ return fallback; }
+  }
+  function saveNum(key, val){
+    try{ localStorage.setItem(key, String(val)); }catch(e){}
+  }
+
+  /* ---------------- navigation ---------------- */
+  var games = [
+    {id:"snake",    color:"var(--snake)",    icon:"🐍", title:"Serpent",       desc:"Le classique du serpent affamé. Grandissez sans vous mordre la queue.", scoreKey:"snake_high", scoreLabel:"Record"},
+    {id:"memory",   color:"var(--memory)",   icon:"🧠", title:"Memory",        desc:"Retournez les cartes et retrouvez toutes les paires le plus vite possible.", scoreKey:"memory_best_moves", scoreLabel:"Meilleur", isMoves:true},
+    {id:"morpion",  color:"var(--morpion)",  icon:"⭕", title:"Morpion",       desc:"Affrontez une IA imbattable. Le mieux que vous puissiez faire : match nul.", scoreKey:"mp_win", scoreLabel:"Victoires"},
+    {id:"breakout", color:"var(--breakout)", icon:"🧱", title:"Casse-briques", desc:"Renvoyez la balle, détruisez les briques, ne la laissez pas tomber.", scoreKey:"brk_high", scoreLabel:"Record"},
+    {id:"runner",   color:"var(--runner)",   icon:"🏃", title:"Runner",        desc:"Changez de voie, sautez, glissez : survivez le plus longtemps possible façon Subway Surfer.", scoreKey:"run_high", scoreLabel:"Record"},
+    {id:"c4",       color:"var(--c4)",       icon:"🔴", title:"Puissance 4",   desc:"Alignez 4 jetons avant l'IA, qui calcule plusieurs coups à l'avance.", scoreKey:"c4_win", scoreLabel:"Victoires"},
+    {id:"2048",     color:"var(--g2048)",    icon:"🔢", title:"2048",          desc:"Fusionnez les tuiles identiques jusqu'à atteindre 2048... et au-delà.", scoreKey:"g2048_best", scoreLabel:"Record"},
+    {id:"tetris",   color:"var(--tetris)",   icon:"🧩", title:"Tetris",        desc:"Empilez les tétrominos, complétez des lignes, tenez le plus longtemps possible.", scoreKey:"tet_best", scoreLabel:"Record"},
+    {id:"flappy",   color:"var(--flappy)",   icon:"🐤", title:"Flappy",        desc:"Un battement d'aile à la fois, slalomez entre les tuyaux.", scoreKey:"fly_best", scoreLabel:"Record"},
+    {id:"pong",     color:"var(--pong)",     icon:"🏓", title:"Pong",          desc:"Le grand classique : votre raquette contre celle de l'ordinateur.", scoreKey:"pong_you", scoreLabel:"Victoires"}
+  ];
+
+  var home = document.getElementById("home");
+  games.forEach(function(g){
+    var card = document.createElement("button");
+    card.className = "game-card";
+    card.style.setProperty("--accent-color", g.color);
+    var scoreVal = loadNum(g.scoreKey, 0);
+    var scoreText = g.isMoves ? (scoreVal>0? scoreVal+" coups" : "–") : scoreVal;
+    card.innerHTML =
+      '<div class="card-icon">'+g.icon+'</div>'+
+      '<h3 class="card-title">'+g.title+'</h3>'+
+      '<p class="card-desc">'+g.desc+'</p>'+
+      '<div class="card-score">'+g.scoreLabel+' : <span data-score>'+scoreText+'</span></div>';
+    card.addEventListener("click", function(){ openGame(g.id); });
+    home.appendChild(card);
+    g._scoreEl = card.querySelector("[data-score]");
+  });
+
+  function refreshCardScore(id){
+    var g = games.find(function(x){return x.id===id;});
+    if(!g) return;
+    var scoreVal = loadNum(g.scoreKey, 0);
+    g._scoreEl.textContent = g.isMoves ? (scoreVal>0? scoreVal+" coups" : "–") : scoreVal;
+  }
+
+  var screens = {};
+  games.forEach(function(g){
+    screens[g.id] = document.getElementById("screen-"+g.id);
+    screens[g.id].style.setProperty("--accent-color", g.color);
+  });
+
+  var current = null;
+  function openGame(id){
+    home.style.display = "none";
+    document.getElementById("global-badge").style.display = "none";
+    Object.keys(screens).forEach(function(k){ screens[k].classList.remove("active"); });
+    screens[id].classList.add("active");
+    current = id;
+    controllers[id].start();
+  }
+  function goHome(){
+    if(current && controllers[current].stop) controllers[current].stop();
+    Object.keys(screens).forEach(function(k){ screens[k].classList.remove("active"); });
+    home.style.display = "grid";
+    document.getElementById("global-badge").style.display = "inline-block";
+    games.forEach(function(g){ refreshCardScore(g.id); });
+    current = null;
+  }
+  document.querySelectorAll("[data-back]").forEach(function(b){
+    b.addEventListener("click", goHome);
+  });
+
+  var controllers = {};
+
+  /* ================= SNAKE ================= */
+  (function(){
+    var canvas = document.getElementById("snake-canvas");
+    var ctx = canvas.getContext("2d");
+    var cols = 18, rows = 18, cell = canvas.width/cols;
+    var snake, dir, nextDir, food, score, best, timer, speed, alive;
+
+    function reset(){
+      snake = [{x:8,y:9},{x:7,y:9},{x:6,y:9}];
+      dir = "right"; nextDir = "right";
+      score = 0; speed = 140; alive = true;
+      best = loadNum("snake_high", 0);
+      document.getElementById("snake-score").textContent = score;
+      document.getElementById("snake-best").textContent = best;
+      document.getElementById("snake-msg").textContent = "";
+      placeFood();
+      draw();
+      clearInterval(timer);
+      timer = setInterval(tick, speed);
+    }
+    function placeFood(){
+      do{
+        food = {x: Math.floor(Math.random()*cols), y: Math.floor(Math.random()*rows)};
+      } while(snake.some(function(s){return s.x===food.x && s.y===food.y;}));
+    }
+    function tick(){
+      if(!alive) return;
+      dir = nextDir;
+      var head = {x:snake[0].x, y:snake[0].y};
+      if(dir==="up") head.y--; else if(dir==="down") head.y++;
+      else if(dir==="left") head.x--; else head.x++;
+
+      if(head.x<0||head.x>=cols||head.y<0||head.y>=rows||snake.some(function(s){return s.x===head.x&&s.y===head.y;})){
+        gameOver(); return;
+      }
+      snake.unshift(head);
+      if(head.x===food.x && head.y===food.y){
+        score++;
+        document.getElementById("snake-score").textContent = score;
+        placeFood();
+        if(speed>60 && score%4===0){
+          speed -= 8;
+          clearInterval(timer);
+          timer = setInterval(tick, speed);
+        }
+      } else {
+        snake.pop();
+      }
+      draw();
+    }
+    function gameOver(){
+      alive = false;
+      clearInterval(timer);
+      if(score>best){ best=score; saveNum("snake_high", best); document.getElementById("snake-best").textContent=best; }
+      document.getElementById("snake-msg").textContent = "Perdu ! Score : "+score;
+    }
+    function draw(){
+      ctx.fillStyle = "#05060a";
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+      ctx.fillStyle = "#ff5d8f";
+      ctx.beginPath();
+      ctx.arc(food.x*cell+cell/2, food.y*cell+cell/2, cell/2.6, 0, Math.PI*2);
+      ctx.fill();
+      snake.forEach(function(s,i){
+        ctx.fillStyle = i===0 ? "#3ddc97" : "rgba(61,220,151,"+(0.85-i*0.02)+")";
+        var r = 4;
+        var x=s.x*cell+1, y=s.y*cell+1, w=cell-2, h=cell-2;
+        ctx.beginPath();
+        ctx.moveTo(x+r,y);
+        ctx.arcTo(x+w,y,x+w,y+h,r);
+        ctx.arcTo(x+w,y+h,x,y+h,r);
+        ctx.arcTo(x,y+h,x,y,r);
+        ctx.arcTo(x,y,x+w,y,r);
+        ctx.closePath();
+        ctx.fill();
+      });
+    }
+    function setDir(d){
+      var opp = {up:"down",down:"up",left:"right",right:"left"};
+      if(d===opp[dir]) return;
+      nextDir = d;
+    }
+    var keyHandler = function(e){
+      var map = {ArrowUp:"up",ArrowDown:"down",ArrowLeft:"left",ArrowRight:"right",
+                 w:"up",s:"down",a:"left",d:"right",z:"up",q:"left"};
+      var d = map[e.key];
+      if(d){ e.preventDefault(); setDir(d); }
+    };
+    document.querySelectorAll("#screen-snake .dpad button").forEach(function(btn){
+      btn.addEventListener("click", function(){ setDir(btn.dataset.dir); });
+    });
+    document.getElementById("snake-restart").addEventListener("click", reset);
+
+    var touchStart = null;
+    canvas.addEventListener("touchstart", function(e){
+      var t = e.changedTouches[0];
+      touchStart = {x:t.clientX, y:t.clientY};
+    }, {passive:true});
+    canvas.addEventListener("touchend", function(e){
+      if(!touchStart) return;
+      var t = e.changedTouches[0];
+      var dx = t.clientX-touchStart.x, dy = t.clientY-touchStart.y;
+      if(Math.max(Math.abs(dx),Math.abs(dy))>20){
+        if(Math.abs(dx)>Math.abs(dy)) setDir(dx>0?"right":"left");
+        else setDir(dy>0?"down":"up");
+      }
+      touchStart = null;
+    }, {passive:true});
+
+    controllers.snake = {
+      start:function(){ document.addEventListener("keydown", keyHandler); reset(); },
+      stop:function(){ document.removeEventListener("keydown", keyHandler); clearInterval(timer); }
+    };
+  })();
+
+  /* ================= MEMORY ================= */
+  (function(){
+    var symbols = ["🎮","👾","🕹️","⭐","🚀","🍄","🐙","💎"];
+    var grid = document.getElementById("memory-grid");
+    var movesEl = document.getElementById("memory-moves");
+    var timeEl = document.getElementById("memory-time");
+    var bestEl = document.getElementById("memory-best");
+    var msgEl = document.getElementById("memory-msg");
+    var cards, flipped, matches, moves, startTime, timerInt, locked;
+
+    function shuffle(arr){
+      for(var i=arr.length-1;i>0;i--){
+        var j = Math.floor(Math.random()*(i+1));
+        var tmp=arr[i]; arr[i]=arr[j]; arr[j]=tmp;
+      }
+      return arr;
+    }
+
+    function reset(){
+      grid.innerHTML = "";
+      var deck = shuffle(symbols.concat(symbols).map(function(s,i){return {sym:s,id:i};}));
+      cards = []; flipped = []; matches = 0; moves = 0; locked = false;
+      movesEl.textContent = "0";
+      timeEl.textContent = "0s";
+      msgEl.textContent = "";
+      var best = loadNum("memory_best_moves", 0);
+      bestEl.textContent = best>0 ? best+" coups" : "–";
+      startTime = null;
+      clearInterval(timerInt);
+      timerInt = setInterval(function(){
+        if(startTime) timeEl.textContent = Math.floor((Date.now()-startTime)/1000)+"s";
+      }, 500);
+
+      deck.forEach(function(d, idx){
+        var el = document.createElement("div");
+        el.className = "mcard";
+        el.innerHTML = '<div class="mcard-inner"><div class="mface back">?</div><div class="mface front">'+d.sym+'</div></div>';
+        el.addEventListener("click", function(){ flip(idx); });
+        grid.appendChild(el);
+        cards.push({el:el, sym:d.sym, matched:false});
+      });
+    }
+
+    function flip(idx){
+      if(locked) return;
+      var c = cards[idx];
+      if(c.matched || c.el.classList.contains("flipped")) return;
+      if(!startTime) startTime = Date.now();
+      c.el.classList.add("flipped");
+      flipped.push(idx);
+      if(flipped.length===2){
+        moves++;
+        movesEl.textContent = moves;
+        locked = true;
+        var a = cards[flipped[0]], b = cards[flipped[1]];
+        if(a.sym===b.sym){
+          a.matched=b.matched=true;
+          a.el.classList.add("matched"); b.el.classList.add("matched");
+          matches++;
+          flipped=[]; locked=false;
+          if(matches===symbols.length) finish();
+        } else {
+          setTimeout(function(){
+            a.el.classList.remove("flipped"); b.el.classList.remove("flipped");
+            flipped=[]; locked=false;
+          }, 700);
+        }
+      }
+    }
+
+    function finish(){
+      clearInterval(timerInt);
+      var elapsed = Math.floor((Date.now()-startTime)/1000);
+      var best = loadNum("memory_best_moves", 0);
+      var isBest = best===0 || moves<best;
+      if(isBest){ saveNum("memory_best_moves", moves); bestEl.textContent = moves+" coups"; }
+      msgEl.textContent = "Gagné en "+moves+" coups et "+elapsed+"s !"+(isBest?" Nouveau record !":"");
+    }
+
+    document.getElementById("memory-restart").addEventListener("click", reset);
+    controllers.memory = {
+      start:function(){ reset(); },
+      stop:function(){ clearInterval(timerInt); }
+    };
+  })();
+
+  /* ================= MORPION ================= */
+  (function(){
+    var gridEl = document.getElementById("morpion-grid");
+    var msgEl = document.getElementById("morpion-msg");
+    var board, over;
+    var lines = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+
+    function reset(){
+      board = Array(9).fill(null);
+      over = false;
+      gridEl.innerHTML = "";
+      msgEl.textContent = "À vous de jouer — vous êtes X";
+      for(var i=0;i<9;i++){
+        var btn = document.createElement("button");
+        btn.className = "mp-cell";
+        btn.addEventListener("click", function(idx){ return function(){ playerMove(idx); }; }(i));
+        gridEl.appendChild(btn);
+      }
+      render();
+    }
+
+    function render(winLine){
+      var cells = gridEl.children;
+      for(var i=0;i<9;i++){
+        cells[i].textContent = board[i] || "";
+        cells[i].disabled = !!board[i] || over;
+        cells[i].classList.toggle("o", board[i]==="O");
+        cells[i].classList.toggle("win", !!winLine && winLine.indexOf(i)>=0);
+      }
+    }
+
+    function checkWinner(b){
+      for(var i=0;i<lines.length;i++){
+        var l = lines[i];
+        if(b[l[0]] && b[l[0]]===b[l[1]] && b[l[1]]===b[l[2]]) return {player:b[l[0]], line:l};
+      }
+      if(b.every(function(v){return v;})) return {player:"draw"};
+      return null;
+    }
+
+    function playerMove(idx){
+      if(over || board[idx]) return;
+      board[idx] = "X";
+      var res = checkWinner(board);
+      if(res){ endGame(res); return; }
+      render();
+      msgEl.textContent = "L'ordinateur réfléchit...";
+      setTimeout(aiMove, 350);
+    }
+
+    function aiMove(){
+      if(over) return;
+      var best = minimax(board, "O");
+      board[best.index] = "O";
+      var res = checkWinner(board);
+      if(res){ endGame(res); return; }
+      render();
+      msgEl.textContent = "À vous de jouer — vous êtes X";
+    }
+
+    function minimax(b, player){
+      var avail = b.map(function(v,i){return v?null:i;}).filter(function(v){return v!==null;});
+      var res = checkWinner(b);
+      if(res){
+        if(res.player==="O") return {score:10};
+        if(res.player==="X") return {score:-10};
+        return {score:0};
+      }
+      var moves = [];
+      avail.forEach(function(idx){
+        var move = {index:idx};
+        b[idx] = player;
+        var result = minimax(b, player==="O"?"X":"O");
+        move.score = result.score;
+        b[idx] = null;
+        moves.push(move);
+      });
+      var bestMove;
+      if(player==="O"){
+        var bestScore = -Infinity;
+        moves.forEach(function(m){ if(m.score>bestScore){ bestScore=m.score; bestMove=m; } });
+      } else {
+        var bestScoreX = Infinity;
+        moves.forEach(function(m){ if(m.score<bestScoreX){ bestScoreX=m.score; bestMove=m; } });
+      }
+      return bestMove;
+    }
+
+    function endGame(res){
+      over = true;
+      var winKey, drawKey, lossKey;
+      var winCount = loadNum("mp_win",0), drawCount = loadNum("mp_draw",0), lossCount = loadNum("mp_loss",0);
+      if(res.player==="draw"){
+        drawCount++; saveNum("mp_draw", drawCount);
+        msgEl.textContent = "Match nul !";
+      } else if(res.player==="X"){
+        winCount++; saveNum("mp_win", winCount);
+        msgEl.textContent = "Bravo, vous avez gagné !";
+      } else {
+        lossCount++; saveNum("mp_loss", lossCount);
+        msgEl.textContent = "L'ordinateur gagne.";
+      }
+      document.getElementById("mp-win").textContent = loadNum("mp_win",0);
+      document.getElementById("mp-draw").textContent = loadNum("mp_draw",0);
+      document.getElementById("mp-loss").textContent = loadNum("mp_loss",0);
+      render(res.line);
+    }
+
+    document.getElementById("morpion-restart").addEventListener("click", reset);
+    controllers.morpion = {
+      start:function(){
+        document.getElementById("mp-win").textContent = loadNum("mp_win",0);
+        document.getElementById("mp-draw").textContent = loadNum("mp_draw",0);
+        document.getElementById("mp-loss").textContent = loadNum("mp_loss",0);
+        reset();
+      },
+      stop:function(){}
+    };
+  })();
+
+  /* ================= RUNNER ================= */
+  (function(){
+    var canvas = document.getElementById("run-canvas");
+    var ctx = canvas.getContext("2d");
+    var W = canvas.width, H = canvas.height;
+    var horizonY = H*0.26, groundY = H*0.94;
+    var msgEl = document.getElementById("run-msg");
+    var scoreEl = document.getElementById("run-score");
+    var bestEl = document.getElementById("run-best");
+
+    var player, obstacles, speed, elapsed, spawnTimer, score, best, running, started, raf, lastT;
+
+    function laneX(lane, z){
+      var spread = 18 + z*95; // how far lanes are apart at this depth
+      return W/2 + (lane-1)*spread;
+    }
+    function depthY(z){ return horizonY + z*(groundY-horizonY); }
+    function depthScale(z){ return 0.18 + z*0.82; }
+
+    function reset(){
+      player = {lane:1, x:laneX(1,1), jumpT:0, duckT:0};
+      obstacles = [];
+      speed = 0.55; elapsed = 0; spawnTimer = 0.9;
+      score = 0; running = true; started = false;
+      best = loadNum("run_high", 0);
+      scoreEl.textContent = "0";
+      bestEl.textContent = best;
+      msgEl.textContent = "Prêt ? Appuyez sur une touche pour courir";
+      draw();
+    }
+
+    function begin(){
+      if(started || !running) return;
+      started = true;
+      msgEl.textContent = "";
+      lastT = performance.now();
+      raf = requestAnimationFrame(loop);
+    }
+
+    function doJump(){
+      begin();
+      if(!running) return;
+      if(player.jumpT<=0) player.jumpT = 1;
+    }
+    function doDuck(){
+      begin();
+      if(!running) return;
+      player.duckT = 1;
+    }
+    function changeLane(d){
+      begin();
+      if(!running) return;
+      player.lane = Math.max(0, Math.min(2, player.lane+d));
+    }
+
+    function spawnThing(){
+      var lane = Math.floor(Math.random()*3);
+      var r = Math.random();
+      var type = r<0.45 ? "barrier" : (r<0.85 ? "beam" : "coin");
+      obstacles.push({lane:lane, z:0, type:type, resolved:false});
+      // occasionally add a coin in an adjacent free lane too
+      if(type!=="coin" && Math.random()<0.3){
+        var lane2 = (lane+1)%3;
+        obstacles.push({lane:lane2, z:0.05, type:"coin", resolved:false});
+      }
+    }
+
+    function loop(t){
+      if(!running) return;
+      var dt = Math.min((t-lastT)/1000, 0.05);
+      lastT = t;
+      elapsed += dt;
+      speed = Math.min(1.7, 0.55 + elapsed*0.028);
+
+      if(player.jumpT>0){ player.jumpT -= dt*2.2; if(player.jumpT<0) player.jumpT=0; }
+      if(player.duckT>0){ player.duckT -= dt*2.2; if(player.duckT<0) player.duckT=0; }
+
+      spawnTimer -= dt;
+      if(spawnTimer<=0){
+        spawnThing();
+        spawnTimer = Math.max(0.55, 1.15 - elapsed*0.01);
+      }
+
+      score += dt*speed*60;
+      scoreEl.textContent = Math.floor(score);
+
+      for(var i=obstacles.length-1;i>=0;i--){
+        var o = obstacles[i];
+        o.z += speed*dt*0.7;
+        if(!o.resolved && o.z>=0.97){
+          o.resolved = true;
+          if(o.lane===player.lane){
+            if(o.type==="coin"){
+              score += 25;
+            } else if(o.type==="barrier" && player.jumpT<=0){
+              return crash();
+            } else if(o.type==="beam" && player.duckT<=0){
+              return crash();
+            }
+          }
+        }
+        if(o.z>1.25) obstacles.splice(i,1);
+      }
+
+      draw();
+      raf = requestAnimationFrame(loop);
+    }
+
+    function crash(){
+      running = false;
+      cancelAnimationFrame(raf);
+      if(Math.floor(score)>best){ best=Math.floor(score); saveNum("run_high", best); bestEl.textContent=best; }
+      msgEl.textContent = "Perdu ! Score : "+Math.floor(score);
+      draw();
+    }
+
+    function draw(){
+      // sky
+      var grad = ctx.createLinearGradient(0,0,0,horizonY);
+      grad.addColorStop(0,"#1a1030");
+      grad.addColorStop(1,"#05060a");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0,0,W,horizonY);
+      // ground
+      ctx.fillStyle = "#0a0c14";
+      ctx.fillRect(0,horizonY,W,H-horizonY);
+
+      // lane lines
+      ctx.strokeStyle = "rgba(199,125,255,0.35)";
+      ctx.lineWidth = 2;
+      for(var lane=0; lane<=2; lane+=2){
+        ctx.beginPath();
+        ctx.moveTo(laneX(lane-0.5,0), depthY(0));
+        ctx.lineTo(laneX(lane-0.5,1), depthY(1));
+        ctx.stroke();
+      }
+      // scrolling dashes on center-ish for speed feel
+      var dashOffset = (elapsed*speed*200)%40;
+      ctx.strokeStyle = "rgba(255,255,255,0.15)";
+      ctx.setLineDash([14,14]);
+      ctx.lineDashOffset = -dashOffset;
+      [0,1,2].forEach(function(l){
+        ctx.beginPath();
+        ctx.moveTo(laneX(l,0), depthY(0));
+        ctx.lineTo(laneX(l,1), depthY(1));
+        ctx.stroke();
+      });
+      ctx.setLineDash([]);
+
+      // obstacles, back to front
+      var sorted = obstacles.slice().sort(function(a,b){return a.z-b.z;});
+      sorted.forEach(function(o){
+        var z = Math.min(o.z,1);
+        var s = depthScale(z);
+        var x = laneX(o.lane, z);
+        var y = depthY(z);
+        if(o.type==="coin"){
+          ctx.fillStyle = "#ffd60a";
+          ctx.beginPath();
+          ctx.arc(x, y-10*s, 9*s, 0, Math.PI*2);
+          ctx.fill();
+        } else if(o.type==="barrier"){
+          ctx.fillStyle = "#ff5d8f";
+          var w=34*s, h=16*s;
+          ctx.fillRect(x-w/2, y-h, w, h);
+        } else if(o.type==="beam"){
+          ctx.fillStyle = "#5ec8ff";
+          var w2=34*s;
+          ctx.fillRect(x-w2/2, y-38*s, w2, 8*s);
+          ctx.fillRect(x-w2/2, y-38*s, 4*s, 38*s);
+          ctx.fillRect(x+w2/2-4*s, y-38*s, 4*s, 38*s);
+        }
+      });
+
+      // player
+      var px = laneX(player.lane, 1);
+      var py = groundY;
+      var jumpOffset = Math.sin(player.jumpT*Math.PI) * 55;
+      var duckSquash = player.duckT>0 ? 0.5 : 1;
+      ctx.fillStyle = "#c77dff";
+      var pw = 30, ph = 40*duckSquash;
+      var r=6;
+      var x=px-pw/2, y=py-ph-jumpOffset, w=pw, h=ph;
+      ctx.beginPath();
+      ctx.moveTo(x+r,y);
+      ctx.arcTo(x+w,y,x+w,y+h,r);
+      ctx.arcTo(x+w,y+h,x,y+h,r);
+      ctx.arcTo(x,y+h,x,y,r);
+      ctx.arcTo(x,y,x+w,y,r);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    var keyHandler = function(e){
+      if(["ArrowLeft","ArrowRight","ArrowUp","ArrowDown"," "].indexOf(e.key)>=0) e.preventDefault();
+      if(e.key==="ArrowLeft") changeLane(-1);
+      else if(e.key==="ArrowRight") changeLane(1);
+      else if(e.key==="ArrowUp" || e.key===" ") doJump();
+      else if(e.key==="ArrowDown") doDuck();
+    };
+    document.querySelectorAll("#screen-runner .dpad button").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var a = btn.dataset.run;
+        if(a==="left") changeLane(-1);
+        else if(a==="right") changeLane(1);
+        else if(a==="jump") doJump();
+        else if(a==="duck") doDuck();
+      });
+    });
+    document.getElementById("run-restart").addEventListener("click", function(){
+      cancelAnimationFrame(raf);
+      reset();
+    });
+
+    var touchStart = null;
+    canvas.addEventListener("touchstart", function(e){
+      var t = e.changedTouches[0];
+      touchStart = {x:t.clientX, y:t.clientY};
+      begin();
+    }, {passive:true});
+    canvas.addEventListener("touchend", function(e){
+      if(!touchStart) return;
+      var t = e.changedTouches[0];
+      var dx = t.clientX-touchStart.x, dy = t.clientY-touchStart.y;
+      if(Math.max(Math.abs(dx),Math.abs(dy))>24){
+        if(Math.abs(dx)>Math.abs(dy)) changeLane(dx>0?1:-1);
+        else if(dy<0) doJump(); else doDuck();
+      }
+      touchStart = null;
+    }, {passive:true});
+    canvas.addEventListener("mousedown", begin);
+
+    controllers.runner = {
+      start:function(){ document.addEventListener("keydown", keyHandler); reset(); },
+      stop:function(){ document.removeEventListener("keydown", keyHandler); running=false; cancelAnimationFrame(raf); }
+    };
+  })();
+
+  /* ================= PUISSANCE 4 ================= */
+  (function(){
+    var ROWS=6, COLS=7, HUMAN="R", AI="O";
+    var boardEl = document.getElementById("c4-board");
+    var msgEl = document.getElementById("c4-msg");
+    var board, over, busy;
+    var cols = [];
+
+    function emptyBoard(){
+      var b=[];
+      for(var r=0;r<ROWS;r++) b.push(new Array(COLS).fill(null));
+      return b;
+    }
+    function buildDom(){
+      boardEl.innerHTML = "";
+      cols = [];
+      for(var c=0;c<COLS;c++){
+        var colEl = document.createElement("div");
+        colEl.className = "c4-col";
+        var cells = [];
+        for(var r=0;r<ROWS;r++){
+          var cell = document.createElement("div");
+          cell.className = "c4-cell";
+          colEl.appendChild(cell);
+          cells.push(cell);
+        }
+        colEl.addEventListener("click", function(idx){ return function(){ humanMove(idx); }; }(c));
+        boardEl.appendChild(colEl);
+        cols.push(cells);
+      }
+    }
+    function render(){
+      for(var c=0;c<COLS;c++){
+        for(var r=0;r<ROWS;r++){
+          var v = board[r][c];
+          cols[c][r].className = "c4-cell" + (v==="R"?" r":v==="O"?" y":"");
+        }
+      }
+    }
+    function dropPiece(b, col, player){
+      for(var r=ROWS-1;r>=0;r--){
+        if(!b[r][col]){ b[r][col]=player; return r; }
+      }
+      return -1;
+    }
+    function validCols(b){
+      var v=[];
+      for(var c=0;c<COLS;c++) if(!b[0][c]) v.push(c);
+      return v;
+    }
+    function checkWin(b, player){
+      var dirs=[[0,1],[1,0],[1,1],[1,-1]];
+      for(var r=0;r<ROWS;r++){
+        for(var c=0;c<COLS;c++){
+          if(b[r][c]!==player) continue;
+          for(var d=0; d<dirs.length; d++){
+            var dr=dirs[d][0], dc=dirs[d][1], ok=true;
+            for(var k=1;k<4;k++){
+              var rr=r+dr*k, cc=c+dc*k;
+              if(rr<0||rr>=ROWS||cc<0||cc>=COLS||b[rr][cc]!==player){ ok=false; break; }
+            }
+            if(ok) return true;
+          }
+        }
+      }
+      return false;
+    }
+    function evalWindow(w, player, opp){
+      var score=0;
+      var pc=w.filter(function(v){return v===player;}).length;
+      var oc=w.filter(function(v){return v===opp;}).length;
+      var ec=w.filter(function(v){return v===null;}).length;
+      if(pc===4) score+=100;
+      else if(pc===3 && ec===1) score+=5;
+      else if(pc===2 && ec===2) score+=2;
+      if(oc===3 && ec===1) score-=4;
+      return score;
+    }
+    function evaluateBoard(b, player){
+      var opp = player===AI?HUMAN:AI, score=0;
+      for(var r=0;r<ROWS;r++) if(b[r][3]===player) score+=3;
+      for(var r2=0;r2<ROWS;r2++){
+        for(var c=0;c<COLS-3;c++){
+          score += evalWindow([b[r2][c],b[r2][c+1],b[r2][c+2],b[r2][c+3]], player, opp);
+        }
+      }
+      for(var c2=0;c2<COLS;c2++){
+        for(var r3=0;r3<ROWS-3;r3++){
+          score += evalWindow([b[r3][c2],b[r3+1][c2],b[r3+2][c2],b[r3+3][c2]], player, opp);
+        }
+      }
+      for(var r4=0;r4<ROWS-3;r4++){
+        for(var c4=0;c4<COLS-3;c4++){
+          score += evalWindow([b[r4][c4],b[r4+1][c4+1],b[r4+2][c4+2],b[r4+3][c4+3]], player, opp);
+          score += evalWindow([b[r4+3][c4],b[r4+2][c4+1],b[r4+1][c4+2],b[r4][c4+3]], player, opp);
+        }
+      }
+      return score;
+    }
+    function minimax(b, depth, alpha, beta, maximizing){
+      var valid = validCols(b);
+      var terminal = checkWin(b,AI) || checkWin(b,HUMAN) || valid.length===0;
+      if(depth===0 || terminal){
+        if(terminal){
+          if(checkWin(b,AI)) return {score:1000000+depth};
+          if(checkWin(b,HUMAN)) return {score:-1000000-depth};
+          return {score:0};
+        }
+        return {score:evaluateBoard(b,AI)};
+      }
+      if(maximizing){
+        var value=-Infinity, bestCol=valid[0];
+        for(var i=0;i<valid.length;i++){
+          var b2 = b.map(function(row){return row.slice();});
+          dropPiece(b2, valid[i], AI);
+          var res = minimax(b2, depth-1, alpha, beta, false);
+          if(res.score>value){ value=res.score; bestCol=valid[i]; }
+          alpha = Math.max(alpha, value);
+          if(alpha>=beta) break;
+        }
+        return {score:value, col:bestCol};
+      } else {
+        var value2=Infinity, bestCol2=valid[0];
+        for(var j=0;j<valid.length;j++){
+          var b3 = b.map(function(row){return row.slice();});
+          dropPiece(b3, valid[j], HUMAN);
+          var res2 = minimax(b3, depth-1, alpha, beta, true);
+          if(res2.score<value2){ value2=res2.score; bestCol2=valid[j]; }
+          beta = Math.min(beta, value2);
+          if(alpha>=beta) break;
+        }
+        return {score:value2, col:bestCol2};
+      }
+    }
+
+    function updateStats(){
+      document.getElementById("c4-win").textContent = loadNum("c4_win",0);
+      document.getElementById("c4-draw").textContent = loadNum("c4_draw",0);
+      document.getElementById("c4-loss").textContent = loadNum("c4_loss",0);
+    }
+
+    function humanMove(col){
+      if(over || busy) return;
+      if(board[0][col]) return;
+      dropPiece(board, col, HUMAN);
+      render();
+      if(checkWin(board, HUMAN)){ return endGame(HUMAN); }
+      if(validCols(board).length===0){ return endGame("draw"); }
+      busy = true;
+      msgEl.textContent = "L'IA réfléchit...";
+      setTimeout(aiMove, 300);
+    }
+    function aiMove(){
+      var res = minimax(board, 5, -Infinity, Infinity, true);
+      dropPiece(board, res.col, AI);
+      render();
+      busy = false;
+      if(checkWin(board, AI)){ return endGame(AI); }
+      if(validCols(board).length===0){ return endGame("draw"); }
+      msgEl.textContent = "À vous — cliquez une colonne";
+    }
+    function endGame(winner){
+      over = true; busy = false;
+      if(winner==="draw"){
+        saveNum("c4_draw", loadNum("c4_draw",0)+1);
+        msgEl.textContent = "Match nul !";
+      } else if(winner===HUMAN){
+        saveNum("c4_win", loadNum("c4_win",0)+1);
+        msgEl.textContent = "Bravo, vous avez aligné 4 jetons !";
+      } else {
+        saveNum("c4_loss", loadNum("c4_loss",0)+1);
+        msgEl.textContent = "L'IA gagne cette manche.";
+      }
+      updateStats();
+    }
+    function reset(){
+      board = emptyBoard();
+      over = false; busy = false;
+      msgEl.textContent = "À vous — cliquez une colonne";
+      buildDom();
+      render();
+      updateStats();
+    }
+    document.getElementById("c4-restart").addEventListener("click", reset);
+    controllers.c4 = { start:function(){ reset(); }, stop:function(){} };
+  })();
+
+  /* ================= 2048 ================= */
+  (function(){
+    var boardEl = document.getElementById("g2048-board");
+    var scoreEl = document.getElementById("g2048-score");
+    var bestEl = document.getElementById("g2048-best");
+    var msgEl = document.getElementById("g2048-msg");
+    var grid, score, best, over, cells;
+    var colors = {
+      2:"#ffe8d6", 4:"#ffd9b3", 8:"#ffb877", 16:"#ff9f5a",
+      32:"#ff8552", 64:"#f4845f", 128:"#f2612c", 256:"#e94f37",
+      512:"#d63b2f", 1024:"#c0392b", 2048:"#ffd166"
+    };
+
+    function buildDom(){
+      boardEl.innerHTML = "";
+      cells = [];
+      for(var r=0;r<4;r++){
+        cells.push([]);
+        for(var c=0;c<4;c++){
+          var cell = document.createElement("div");
+          cell.className = "g2048-cell";
+          boardEl.appendChild(cell);
+          cells[r].push(cell);
+        }
+      }
+    }
+    function render(){
+      for(var r=0;r<4;r++){
+        for(var c=0;c<4;c++){
+          var v = grid[r][c];
+          var cell = cells[r][c];
+          cell.textContent = v||"";
+          cell.style.background = v ? (colors[v]||"#7c1d1d") : "rgba(255,255,255,0.04)";
+          cell.style.color = v && v<=4 ? "#5a3a1a" : (v ? "#fff" : "transparent");
+        }
+      }
+    }
+    function emptyCells(){
+      var list=[];
+      for(var r=0;r<4;r++) for(var c=0;c<4;c++) if(!grid[r][c]) list.push([r,c]);
+      return list;
+    }
+    function spawnTile(){
+      var empties = emptyCells();
+      if(empties.length===0) return;
+      var pick = empties[Math.floor(Math.random()*empties.length)];
+      grid[pick[0]][pick[1]] = Math.random()<0.9 ? 2 : 4;
+    }
+    function slideLeft(row){
+      var arr = row.filter(function(v){return v!==0;});
+      var gained = 0;
+      for(var i=0;i<arr.length-1;i++){
+        if(arr[i]===arr[i+1]){ arr[i]*=2; gained+=arr[i]; arr.splice(i+1,1); }
+      }
+      while(arr.length<4) arr.push(0);
+      return {row:arr, gained:gained};
+    }
+    function move(dir){
+      if(over) return;
+      var moved = false, gained = 0;
+      var newGrid = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]];
+      if(dir==="left" || dir==="right"){
+        for(var r=0;r<4;r++){
+          var row = grid[r].slice();
+          if(dir==="right") row.reverse();
+          var res = slideLeft(row);
+          if(dir==="right") res.row.reverse();
+          for(var c=0;c<4;c++){
+            newGrid[r][c] = res.row[c];
+            if(res.row[c]!==grid[r][c]) moved=true;
+          }
+          gained += res.gained;
+        }
+      } else {
+        for(var c2=0;c2<4;c2++){
+          var col = [grid[0][c2],grid[1][c2],grid[2][c2],grid[3][c2]];
+          if(dir==="down") col.reverse();
+          var res2 = slideLeft(col);
+          if(dir==="down") res2.row.reverse();
+          for(var r2=0;r2<4;r2++){
+            newGrid[r2][c2] = res2.row[r2];
+            if(res2.row[r2]!==grid[r2][c2]) moved=true;
+          }
+          gained += res2.gained;
+        }
+      }
+      if(!moved) return;
+      grid = newGrid;
+      score += gained;
+      scoreEl.textContent = score;
+      if(score>best){ best=score; saveNum("g2048_best", best); bestEl.textContent=best; }
+      spawnTile();
+      render();
+      checkGameOver();
+    }
+    function canMove(){
+      if(emptyCells().length>0) return true;
+      for(var r=0;r<4;r++){
+        for(var c=0;c<4;c++){
+          var v = grid[r][c];
+          if(c<3 && grid[r][c+1]===v) return true;
+          if(r<3 && grid[r+1][c]===v) return true;
+        }
+      }
+      return false;
+    }
+    function checkGameOver(){
+      if(!canMove()){
+        over = true;
+        msgEl.textContent = "Plus de mouvement possible — Score : "+score;
+      }
+    }
+    function reset(){
+      grid = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]];
+      score = 0; over = false;
+      best = loadNum("g2048_best", 0);
+      scoreEl.textContent = "0";
+      bestEl.textContent = best;
+      msgEl.textContent = "";
+      buildDom();
+      spawnTile(); spawnTile();
+      render();
+    }
+    var keyHandler = function(e){
+      var map = {ArrowLeft:"left",ArrowRight:"right",ArrowUp:"up",ArrowDown:"down"};
+      var d = map[e.key];
+      if(d){ e.preventDefault(); move(d); }
+    };
+    var touchStart = null;
+    boardEl.addEventListener("touchstart", function(e){
+      var t=e.changedTouches[0]; touchStart={x:t.clientX,y:t.clientY};
+    }, {passive:true});
+    boardEl.addEventListener("touchend", function(e){
+      if(!touchStart) return;
+      var t=e.changedTouches[0];
+      var dx=t.clientX-touchStart.x, dy=t.clientY-touchStart.y;
+      if(Math.max(Math.abs(dx),Math.abs(dy))>20){
+        if(Math.abs(dx)>Math.abs(dy)) move(dx>0?"right":"left");
+        else move(dy>0?"down":"up");
+      }
+      touchStart=null;
+    }, {passive:true});
+    document.getElementById("g2048-restart").addEventListener("click", reset);
+    controllers["2048"] = {
+      start:function(){ document.addEventListener("keydown", keyHandler); reset(); },
+      stop:function(){ document.removeEventListener("keydown", keyHandler); }
+    };
+  })();
+
+  /* ================= TETRIS ================= */
+  (function(){
+    var canvas = document.getElementById("tet-canvas");
+    var ctx = canvas.getContext("2d");
+    var nextCanvas = document.getElementById("tet-next");
+    var nctx = nextCanvas.getContext("2d");
+    var COLS=10, ROWS=20, CELL=20;
+    var scoreEl = document.getElementById("tet-score");
+    var linesEl = document.getElementById("tet-lines");
+    var bestEl = document.getElementById("tet-best");
+    var msgEl = document.getElementById("tet-msg");
+
+    var PIECES = {
+      I:{matrix:[[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]], color:"#4cc9f0"},
+      O:{matrix:[[1,1],[1,1]], color:"#ffd166"},
+      T:{matrix:[[0,1,0],[1,1,1],[0,0,0]], color:"#c77dff"},
+      S:{matrix:[[0,1,1],[1,1,0],[0,0,0]], color:"#3ddc97"},
+      Z:{matrix:[[1,1,0],[0,1,1],[0,0,0]], color:"#ff5d8f"},
+      J:{matrix:[[1,0,0],[1,1,1],[0,0,0]], color:"#5ec8ff"},
+      L:{matrix:[[0,0,1],[1,1,1],[0,0,0]], color:"#f4845f"}
+    };
+    var KEYS = Object.keys(PIECES);
+
+    var board, cur, next, score, lines, level, best, running, over, dropTimer, lastT, raf;
+
+    function emptyBoard(){
+      var b=[];
+      for(var r=0;r<ROWS;r++) b.push(new Array(COLS).fill(null));
+      return b;
+    }
+    function randomPiece(){
+      var key = KEYS[Math.floor(Math.random()*KEYS.length)];
+      var p = PIECES[key];
+      return {matrix:p.matrix.map(function(row){return row.slice();}), color:p.color, x:Math.floor((COLS-p.matrix.length)/2), y:-2};
+    }
+    function rotateCW(m){
+      var n=m.length, res=[];
+      for(var i=0;i<n;i++){
+        res.push([]);
+        for(var j=0;j<n;j++) res[i][j]=m[n-1-j][i];
+      }
+      return res;
+    }
+    function collides(b, matrix, px, py){
+      for(var y=0;y<matrix.length;y++){
+        for(var x=0;x<matrix[y].length;x++){
+          if(!matrix[y][x]) continue;
+          var bx=px+x, by=py+y;
+          if(bx<0||bx>=COLS||by>=ROWS) return true;
+          if(by>=0 && b[by][bx]) return true;
+        }
+      }
+      return false;
+    }
+    function lockPiece(){
+      cur.matrix.forEach(function(row,y){
+        row.forEach(function(v,x){
+          if(v){
+            var by=cur.y+y, bx=cur.x+x;
+            if(by>=0) board[by][bx]=cur.color;
+          }
+        });
+      });
+      var cleared = 0;
+      board = board.filter(function(row){
+        var full = row.every(function(c){return c;});
+        if(full) cleared++;
+        return !full;
+      });
+      while(board.length<ROWS) board.unshift(new Array(COLS).fill(null));
+      if(cleared>0){
+        var points = [0,100,300,500,800][cleared]*level;
+        score += points;
+        lines += cleared;
+        level = Math.floor(lines/10)+1;
+        scoreEl.textContent = score;
+        linesEl.textContent = lines;
+        if(score>best){ best=score; saveNum("tet_best", best); bestEl.textContent=best; }
+      }
+      cur = next;
+      next = randomPiece();
+      drawNext();
+      if(collides(board, cur.matrix, cur.x, cur.y)){
+        gameOver();
+      }
+    }
+    function gameOver(){
+      running = false; over = true;
+      cancelAnimationFrame(raf);
+      msgEl.textContent = "Partie terminée — Score : "+score;
+    }
+    function moveDown(){
+      if(!collides(board, cur.matrix, cur.x, cur.y+1)){
+        cur.y++;
+      } else {
+        lockPiece();
+      }
+    }
+    function hardDrop(){
+      if(over) return;
+      while(!collides(board, cur.matrix, cur.x, cur.y+1)) cur.y++;
+      lockPiece();
+      draw();
+    }
+    function move(dx){
+      if(over) return;
+      if(!collides(board, cur.matrix, cur.x+dx, cur.y)) cur.x += dx;
+      draw();
+    }
+    function rotate(){
+      if(over) return;
+      var rotated = rotateCW(cur.matrix);
+      var kicks = [0,-1,1,-2,2];
+      for(var i=0;i<kicks.length;i++){
+        if(!collides(board, rotated, cur.x+kicks[i], cur.y)){
+          cur.matrix = rotated;
+          cur.x += kicks[i];
+          draw();
+          return;
+        }
+      }
+    }
+    function softDrop(){
+      if(over) return;
+      moveDown();
+      draw();
+    }
+
+    function drawCell(c, x, y, color){
+      var px=x*CELL, py=y*CELL;
+      c.fillStyle = color;
+      c.fillRect(px+1, py+1, CELL-2, CELL-2);
+    }
+    function draw(){
+      ctx.fillStyle = "#05060a";
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+      for(var r=0;r<ROWS;r++){
+        for(var c=0;c<COLS;c++){
+          if(board[r][c]) drawCell(ctx, c, r, board[r][c]);
+        }
+      }
+      if(cur){
+        cur.matrix.forEach(function(row,y){
+          row.forEach(function(v,x){
+            if(v && cur.y+y>=0) drawCell(ctx, cur.x+x, cur.y+y, cur.color);
+          });
+        });
+      }
+    }
+    function drawNext(){
+      nctx.fillStyle = "#05060a";
+      nctx.fillRect(0,0,nextCanvas.width,nextCanvas.height);
+      if(!next) return;
+      var size = next.matrix.length;
+      var cell = 18;
+      var offsetX = (nextCanvas.width - size*cell)/2;
+      var offsetY = (nextCanvas.height - size*cell)/2;
+      next.matrix.forEach(function(row,y){
+        row.forEach(function(v,x){
+          if(v){
+            nctx.fillStyle = next.color;
+            nctx.fillRect(offsetX+x*cell+1, offsetY+y*cell+1, cell-2, cell-2);
+          }
+        });
+      });
+    }
+
+    function loop(t){
+      if(!running) return;
+      var dt = t-lastT; lastT = t;
+      dropTimer += dt;
+      var interval = Math.max(120, 800-(level-1)*60);
+      if(dropTimer>interval){
+        dropTimer = 0;
+        moveDown();
+      }
+      draw();
+      raf = requestAnimationFrame(loop);
+    }
+
+    function reset(){
+      board = emptyBoard();
+      score = 0; lines = 0; level = 1; dropTimer = 0; over = false;
+      best = loadNum("tet_best", 0);
+      scoreEl.textContent="0"; linesEl.textContent="0"; bestEl.textContent=best;
+      msgEl.textContent = "";
+      cur = randomPiece();
+      next = randomPiece();
+      drawNext();
+      draw();
+      running = true;
+      lastT = performance.now();
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(loop);
+    }
+
+    var keyHandler = function(e){
+      if(["ArrowLeft","ArrowRight","ArrowUp","ArrowDown"," "].indexOf(e.key)>=0) e.preventDefault();
+      if(e.key==="ArrowLeft") move(-1);
+      else if(e.key==="ArrowRight") move(1);
+      else if(e.key==="ArrowUp") rotate();
+      else if(e.key==="ArrowDown") softDrop();
+      else if(e.key===" ") hardDrop();
+    };
+    document.querySelectorAll("#screen-tetris .dpad button").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var a = btn.dataset.tet;
+        if(a==="left") move(-1);
+        else if(a==="right") move(1);
+        else if(a==="rotate") rotate();
+        else if(a==="down") softDrop();
+      });
+    });
+    document.getElementById("tet-drop").addEventListener("click", hardDrop);
+    document.getElementById("tet-restart").addEventListener("click", reset);
+
+    controllers.tetris = {
+      start:function(){ document.addEventListener("keydown", keyHandler); reset(); },
+      stop:function(){ document.removeEventListener("keydown", keyHandler); running=false; cancelAnimationFrame(raf); }
+    };
+  })();
+
+  /* ================= FLAPPY ================= */
+  (function(){
+    var canvas = document.getElementById("fly-canvas");
+    var ctx = canvas.getContext("2d");
+    var W = canvas.width, H = canvas.height;
+    var scoreEl = document.getElementById("fly-score");
+    var bestEl = document.getElementById("fly-best");
+    var msgEl = document.getElementById("fly-msg");
+    var groundY = H-24;
+    var pipeW = 52, gapH = 132;
+
+    var bird, pipes, score, best, running, started, raf, lastT;
+
+    function reset(){
+      bird = {x:64, y:H/2, r:12, vy:0};
+      pipes = [];
+      score = 0; running = true; started = false;
+      best = loadNum("fly_best", 0);
+      scoreEl.textContent = "0";
+      bestEl.textContent = best;
+      msgEl.textContent = "Cliquez ou espace pour voler";
+      draw();
+    }
+    function begin(){
+      if(started || !running) return;
+      started = true;
+      msgEl.textContent = "";
+      lastT = performance.now();
+      spawnPipe();
+      raf = requestAnimationFrame(loop);
+    }
+    function flap(){
+      if(!running) return;
+      begin();
+      bird.vy = -370;
+    }
+    function spawnPipe(){
+      var margin = 50;
+      var gapY = margin + Math.random()*(H-groundY - 2*margin - gapH) + gapH/2;
+      // clamp within playfield
+      gapY = Math.max(margin+gapH/2, Math.min(groundY-margin-gapH/2, gapY));
+      pipes.push({x:W+pipeW, gapY:gapY, scored:false});
+    }
+    function loop(t){
+      if(!running) return;
+      var dt = Math.min((t-lastT)/1000, 0.032);
+      lastT = t;
+
+      bird.vy += 1300*dt;
+      bird.y += bird.vy*dt;
+
+      var speed = 150;
+      for(var i=pipes.length-1;i>=0;i--){
+        pipes[i].x -= speed*dt;
+        if(!pipes[i].scored && pipes[i].x+pipeW < bird.x-bird.r){
+          pipes[i].scored = true;
+          score++;
+          scoreEl.textContent = score;
+        }
+        if(pipes[i].x < -pipeW) pipes.splice(i,1);
+      }
+      if(pipes.length===0 || pipes[pipes.length-1].x < W-190){
+        spawnPipe();
+      }
+
+      // collisions
+      if(bird.y-bird.r<0 || bird.y+bird.r>groundY){ return crash(); }
+      for(var j=0;j<pipes.length;j++){
+        var p = pipes[j];
+        if(bird.x+bird.r>p.x && bird.x-bird.r<p.x+pipeW){
+          if(bird.y-bird.r<p.gapY-gapH/2 || bird.y+bird.r>p.gapY+gapH/2){
+            return crash();
+          }
+        }
+      }
+
+      draw();
+      raf = requestAnimationFrame(loop);
+    }
+    function crash(){
+      running = false;
+      cancelAnimationFrame(raf);
+      if(score>best){ best=score; saveNum("fly_best", best); bestEl.textContent=best; }
+      msgEl.textContent = "Aïe ! Score : "+score;
+      draw();
+    }
+    function draw(){
+      var grad = ctx.createLinearGradient(0,0,0,H);
+      grad.addColorStop(0,"#1a1030");
+      grad.addColorStop(1,"#05060a");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0,0,W,H);
+
+      ctx.fillStyle = "#f6bd60";
+      pipes.forEach(function(p){
+        ctx.fillRect(p.x, 0, pipeW, p.gapY-gapH/2);
+        ctx.fillRect(p.x, p.gapY+gapH/2, pipeW, groundY-(p.gapY+gapH/2));
+      });
+
+      ctx.fillStyle = "#241c33";
+      ctx.fillRect(0, groundY, W, H-groundY);
+
+      ctx.beginPath();
+      ctx.arc(bird.x, bird.y, bird.r, 0, Math.PI*2);
+      ctx.fillStyle = "#ffd166";
+      ctx.fill();
+      ctx.strokeStyle = "#f6bd60";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    canvas.addEventListener("mousedown", flap);
+    canvas.addEventListener("touchstart", function(e){ flap(); e.preventDefault(); }, {passive:false});
+    var keyHandler = function(e){
+      if(e.key===" " || e.key==="ArrowUp"){ e.preventDefault(); flap(); }
+    };
+    document.getElementById("fly-restart").addEventListener("click", function(){
+      cancelAnimationFrame(raf);
+      reset();
+    });
+    controllers.flappy = {
+      start:function(){ document.addEventListener("keydown", keyHandler); reset(); },
+      stop:function(){ document.removeEventListener("keydown", keyHandler); running=false; cancelAnimationFrame(raf); }
+    };
+  })();
+
+  /* ================= PONG ================= */
+  (function(){
+    var canvas = document.getElementById("pong-canvas");
+    var ctx = canvas.getContext("2d");
+    var W = canvas.width, H = canvas.height;
+    var youEl = document.getElementById("pong-you");
+    var cpuEl = document.getElementById("pong-cpu");
+    var msgEl = document.getElementById("pong-msg");
+
+    var player, ai, ball, you, cpu, running, raf, lastT, keyState;
+
+    function resetBall(dir){
+      var angle = (Math.random()*0.6-0.3);
+      ball = {x:W/2, y:H/2, r:6, vx: 220*(dir||1)*Math.cos(angle), vy: 220*Math.sin(angle)};
+    }
+    function reset(){
+      player = {x:12, y:H/2-32, w:8, h:64};
+      ai = {x:W-20, y:H/2-32, w:8, h:64};
+      you = loadNum("pong_you", 0);
+      cpu = loadNum("pong_cpu", 0);
+      youEl.textContent = you;
+      cpuEl.textContent = cpu;
+      msgEl.textContent = "";
+      resetBall(Math.random()<0.5?1:-1);
+      running = true;
+      keyState = {};
+      lastT = performance.now();
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(loop);
+    }
+    function loop(t){
+      if(!running) return;
+      var dt = Math.min((t-lastT)/1000, 0.032);
+      lastT = t;
+
+      if(keyState.up) player.y -= 260*dt;
+      if(keyState.down) player.y += 260*dt;
+      player.y = Math.max(0, Math.min(H-player.h, player.y));
+
+      var aiCenter = ai.y+ai.h/2;
+      var target = ball.y;
+      var aiSpeed = 190;
+      if(aiCenter < target-6) ai.y += aiSpeed*dt;
+      else if(aiCenter > target+6) ai.y -= aiSpeed*dt;
+      ai.y = Math.max(0, Math.min(H-ai.h, ai.y));
+
+      ball.x += ball.vx*dt;
+      ball.y += ball.vy*dt;
+      if(ball.y-ball.r<0){ ball.y=ball.r; ball.vy*=-1; }
+      if(ball.y+ball.r>H){ ball.y=H-ball.r; ball.vy*=-1; }
+
+      if(ball.vx<0 && ball.x-ball.r<player.x+player.w && ball.x-ball.r>player.x-10 &&
+         ball.y>player.y && ball.y<player.y+player.h){
+        var hit = (ball.y-(player.y+player.h/2))/(player.h/2);
+        var speed = Math.min(420, Math.hypot(ball.vx,ball.vy)*1.05);
+        var angle = hit*(Math.PI/3.2);
+        ball.vx = speed*Math.cos(angle);
+        ball.vy = speed*Math.sin(angle);
+        ball.x = player.x+player.w+ball.r;
+      }
+      if(ball.vx>0 && ball.x+ball.r>ai.x && ball.x+ball.r<ai.x+10+ai.w &&
+         ball.y>ai.y && ball.y<ai.y+ai.h){
+        var hit2 = (ball.y-(ai.y+ai.h/2))/(ai.h/2);
+        var speed2 = Math.min(420, Math.hypot(ball.vx,ball.vy)*1.05);
+        var angle2 = Math.PI - hit2*(Math.PI/3.2);
+        ball.vx = speed2*Math.cos(angle2);
+        ball.vy = speed2*Math.sin(angle2);
+        ball.x = ai.x-ball.r;
+      }
+
+      if(ball.x<-20){
+        cpu++; saveNum("pong_cpu", cpu); cpuEl.textContent=cpu;
+        resetBall(1);
+      } else if(ball.x>W+20){
+        you++; saveNum("pong_you", you); youEl.textContent=you;
+        resetBall(-1);
+      }
+
+      draw();
+      raf = requestAnimationFrame(loop);
+    }
+    function draw(){
+      ctx.fillStyle = "#05060a";
+      ctx.fillRect(0,0,W,H);
+      ctx.strokeStyle = "rgba(255,255,255,0.15)";
+      ctx.setLineDash([6,10]);
+      ctx.beginPath();
+      ctx.moveTo(W/2,0); ctx.lineTo(W/2,H);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = "#95e06c";
+      ctx.fillRect(player.x, player.y, player.w, player.h);
+      ctx.fillRect(ai.x, ai.y, ai.w, ai.h);
+      ctx.beginPath();
+      ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI*2);
+      ctx.fillStyle = "#eef0f6";
+      ctx.fill();
+    }
+    function movePlayerTo(clientY){
+      var rect = canvas.getBoundingClientRect();
+      var scale = H/rect.height;
+      var y = (clientY-rect.top)*scale - player.h/2;
+      player.y = Math.max(0, Math.min(H-player.h, y));
+    }
+    canvas.addEventListener("mousemove", function(e){ movePlayerTo(e.clientY); });
+    canvas.addEventListener("touchmove", function(e){ movePlayerTo(e.touches[0].clientY); e.preventDefault(); }, {passive:false});
+    var keyHandler = function(e){
+      if(e.key==="ArrowUp"){ e.preventDefault(); keyState.up=true; }
+      if(e.key==="ArrowDown"){ e.preventDefault(); keyState.down=true; }
+    };
+    var keyUpHandler = function(e){
+      if(e.key==="ArrowUp") keyState.up=false;
+      if(e.key==="ArrowDown") keyState.down=false;
+    };
+    document.getElementById("pong-restart").addEventListener("click", function(){
+      saveNum("pong_you", 0); saveNum("pong_cpu", 0);
+      reset();
+    });
+    controllers.pong = {
+      start:function(){
+        document.addEventListener("keydown", keyHandler);
+        document.addEventListener("keyup", keyUpHandler);
+        reset();
+      },
+      stop:function(){
+        document.removeEventListener("keydown", keyHandler);
+        document.removeEventListener("keyup", keyUpHandler);
+        running=false; cancelAnimationFrame(raf);
+      }
+    };
+  })();
+
+  /* ================= BREAKOUT ================= */
+  (function(){
+    var canvas = document.getElementById("brk-canvas");
+    var ctx = canvas.getContext("2d");
+    var W = canvas.width, H = canvas.height;
+    var paddle, ball, bricks, score, lives, best, running, launched, raf;
+    var rows=5, cols=8, brickW, brickH=16, brickPad=4, brickTop=34;
+    var rowColors = ["#ff5d8f","#ffb703","#5ec8ff","#3ddc97","#7c8cff"];
+
+    function initBricks(){
+      brickW = (W - brickPad*(cols+1))/cols;
+      bricks = [];
+      for(var r=0;r<rows;r++){
+        for(var c=0;c<cols;c++){
+          bricks.push({x:brickPad + c*(brickW+brickPad), y:brickTop + r*(brickH+brickPad), w:brickW, h:brickH, alive:true, color:rowColors[r]});
+        }
+      }
+    }
+
+    function reset(){
+      paddle = {w:70,h:10,x:W/2-35,y:H-22};
+      ball = {x:W/2, y:H-32, r:6, vx:0, vy:0, speed:4.2};
+      score = 0; lives = 3; launched = false; running = true;
+      best = loadNum("brk_high", 0);
+      document.getElementById("brk-score").textContent = score;
+      document.getElementById("brk-lives").textContent = lives;
+      document.getElementById("brk-best").textContent = best;
+      document.getElementById("brk-msg").textContent = "Cliquez ou appuyez pour lancer la balle";
+      initBricks();
+      draw();
+    }
+
+    function launch(){
+      if(launched || !running) return;
+      launched = true;
+      var angle = (Math.random()*0.6 - 0.3) - Math.PI/2;
+      ball.vx = ball.speed*Math.cos(angle);
+      ball.vy = ball.speed*Math.sin(angle);
+      document.getElementById("brk-msg").textContent = "";
+    }
+
+    function movePaddleTo(clientX){
+      var rect = canvas.getBoundingClientRect();
+      var scale = W/rect.width;
+      var x = (clientX-rect.left)*scale - paddle.w/2;
+      paddle.x = Math.max(0, Math.min(W-paddle.w, x));
+      if(!launched) ball.x = paddle.x + paddle.w/2;
+    }
+
+    function step(){
+      if(!running) return;
+      if(launched){
+        ball.x += ball.vx; ball.y += ball.vy;
+        if(ball.x-ball.r<0){ ball.x=ball.r; ball.vx*=-1; }
+        if(ball.x+ball.r>W){ ball.x=W-ball.r; ball.vx*=-1; }
+        if(ball.y-ball.r<0){ ball.y=ball.r; ball.vy*=-1; }
+
+        if(ball.y+ball.r>=paddle.y && ball.y+ball.r<=paddle.y+paddle.h+6 &&
+           ball.x>=paddle.x && ball.x<=paddle.x+paddle.w && ball.vy>0){
+          var hit = (ball.x - (paddle.x+paddle.w/2))/(paddle.w/2);
+          var angle = hit*(Math.PI/3) - Math.PI/2;
+          ball.vx = ball.speed*Math.cos(angle);
+          ball.vy = ball.speed*Math.sin(angle);
+          ball.y = paddle.y - ball.r;
+        }
+
+        bricks.forEach(function(b){
+          if(!b.alive) return;
+          if(ball.x+ball.r>b.x && ball.x-ball.r<b.x+b.w && ball.y+ball.r>b.y && ball.y-ball.r<b.y+b.h){
+            b.alive = false;
+            ball.vy *= -1;
+            score += 10;
+            document.getElementById("brk-score").textContent = score;
+            if(score>best){ best=score; saveNum("brk_high", best); document.getElementById("brk-best").textContent = best; }
+          }
+        });
+
+        if(bricks.every(function(b){return !b.alive;})){
+          ball.speed += 0.6;
+          initBricks();
+          launched = false;
+          ball.x = paddle.x+paddle.w/2; ball.y = paddle.y-10; ball.vx=0; ball.vy=0;
+          document.getElementById("brk-msg").textContent = "Niveau suivant ! Relancez la balle.";
+        }
+
+        if(ball.y-ball.r>H){
+          lives--;
+          document.getElementById("brk-lives").textContent = lives;
+          if(lives<=0){
+            running = false;
+            document.getElementById("brk-msg").textContent = "Partie terminée — Score : "+score;
+            draw();
+            return;
+          }
+          launched = false;
+          ball.x = paddle.x+paddle.w/2; ball.y = paddle.y-10; ball.vx=0; ball.vy=0;
+          document.getElementById("brk-msg").textContent = "Cliquez pour relancer";
+        }
+      } else {
+        ball.x = paddle.x + paddle.w/2;
+      }
+      draw();
+      raf = requestAnimationFrame(step);
+    }
+
+    function draw(){
+      ctx.fillStyle = "#05060a";
+      ctx.fillRect(0,0,W,H);
+      bricks.forEach(function(b){
+        if(!b.alive) return;
+        ctx.fillStyle = b.color;
+        ctx.fillRect(b.x,b.y,b.w,b.h);
+      });
+      ctx.fillStyle = "#5ec8ff";
+      ctx.fillRect(paddle.x,paddle.y,paddle.w,paddle.h);
+      ctx.beginPath();
+      ctx.arc(ball.x,ball.y,ball.r,0,Math.PI*2);
+      ctx.fillStyle = "#eef0f6";
+      ctx.fill();
+    }
+
+    canvas.addEventListener("mousemove", function(e){ movePaddleTo(e.clientX); });
+    canvas.addEventListener("touchmove", function(e){ movePaddleTo(e.touches[0].clientX); e.preventDefault(); }, {passive:false});
+    canvas.addEventListener("mousedown", launch);
+    canvas.addEventListener("touchstart", function(e){ movePaddleTo(e.touches[0].clientX); launch(); }, {passive:true});
+
+    var keyState = {};
+    var keyHandler = function(e){
+      if(e.key==="ArrowLeft") keyState.left = true;
+      if(e.key==="ArrowRight") keyState.right = true;
+      if(e.key===" ") launch();
+    };
+    var keyUpHandler = function(e){
+      if(e.key==="ArrowLeft") keyState.left = false;
+      if(e.key==="ArrowRight") keyState.right = false;
+    };
+    function applyKeys(){
+      if(keyState.left) paddle.x = Math.max(0, paddle.x-6);
+      if(keyState.right) paddle.x = Math.min(W-paddle.w, paddle.x+6);
+      if(!launched) ball.x = paddle.x+paddle.w/2;
+    }
+    var keyLoop;
+
+    document.getElementById("brk-restart").addEventListener("click", reset);
+
+    controllers.breakout = {
+      start:function(){
+        document.addEventListener("keydown", keyHandler);
+        document.addEventListener("keyup", keyUpHandler);
+        keyLoop = setInterval(applyKeys, 16);
+        reset();
+        cancelAnimationFrame(raf);
+        raf = requestAnimationFrame(step);
+      },
+      stop:function(){
+        document.removeEventListener("keydown", keyHandler);
+        document.removeEventListener("keyup", keyUpHandler);
+        clearInterval(keyLoop);
+        cancelAnimationFrame(raf);
+        running = false;
+      }
+    };
+  })();
+
+})();
+</script>
